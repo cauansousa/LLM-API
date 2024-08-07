@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming API Example</title>
+    <script>
+        async function sendText() {
+            const text = document.getElementById('inputText').value;
+            const responseContainer = document.getElementById('response');
+            responseContainer.textContent = ''; // Clear previous response
+
+            const response = await fetch('http://localhost:8000/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: text }),
+            });
+
+            if (response.ok) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let result = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    result += decoder.decode(value, { stream: true });
+                    responseContainer.textContent = result;
+                }
+            } else {
+                console.error('Failed to fetch:', response.statusText);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Streaming API Example</h1>
+    <textarea id="inputText" rows="4" cols="50"></textarea><br>
+    <button onclick="sendText()">Send</button>
+    <pre id="response"></pre>
+</body>
+</html>
